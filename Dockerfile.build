@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     python3 \
     build-essential \
+    gfortran \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,3 +23,13 @@ RUN . /opt/spack/share/spack/setup-env.sh && \
     spack --version
 
 CMD ["/bin/bash"]
+
+# Copy your custom Spack repository
+COPY c4h-spack-packages /opt/c4h-spack-packages
+
+# Add it to Spack and build stitched
+RUN source /opt/spack/share/spack/setup-env.sh && \
+    spack compiler find && \
+    spack install gcc@14 && \
+    spack repo add /opt/c4h-spack-packages/spack_repo/code4hep && \
+    spack install stitched cxxstd=20 %gcc@14 ^root@6.36 cxxstd=20

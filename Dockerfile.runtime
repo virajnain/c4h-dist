@@ -1,5 +1,7 @@
 FROM code4hep-build:latest
 
+WORKDIR /workspace
+
 RUN echo "RUNTIME IMAGE WORKS" > /runtime.txt
 
 CMD ["bash"]
