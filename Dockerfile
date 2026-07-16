@@ -40,7 +40,7 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
 #Install Code4hep
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack env activate code4hep_env && \
-    spack repo add /opt/c4h-spack-packages && \
+    spack repo add /opt/c4h-spack-packages/spack_repo/code4hep && \
     spack add code4hep %gcc@14 && \
     spack concretize -f && \
     spack install
