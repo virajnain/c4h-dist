@@ -30,11 +30,6 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack install --fail-fast && \
     spack gc -y                       # <- drops build-only deps (cmake, m4, ...)
 
-RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
-    xargs file -i | grep 'charset=binary' | \
-    grep 'x-executable\|x-archive\|x-sharedlib' | \
-    awk -F: '{print $1}' | xargs strip 2>/dev/null || true
-
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack env activate --sh -d /opt/spack/var/spack/environments/code4hep_env > /opt/activate.sh
 
