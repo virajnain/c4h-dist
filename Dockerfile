@@ -28,7 +28,7 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack add code4hep %gcc@14 && \
     spack concretize -f && \
     spack install --fail-fast && \
-    spack gc -y                       # <- drops build-only deps (cmake, m4, ...)
+    spack gc -y
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack env activate --sh -d /opt/spack/var/spack/environments/code4hep_env > /opt/activate.sh
