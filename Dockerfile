@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 as builder
 
-# System packages needed by Spack
+#System packages needed by Spack
 RUN apt-get update && apt-get install -y \
     bash \
     git \
@@ -29,7 +29,8 @@ SHELL ["/bin/bash", "-c"]
 #Add compiler
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack compiler find && \
-    spack install gcc@14
+    spack install gcc@14 && \
+    spack compiler add $(spack location -i gcc@14)
 
 COPY c4h-spack-packages /opt/c4h-spack-packages
 
@@ -47,7 +48,7 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
 
 CMD ["/bin/bash"]
 
-#new stage
+#Deployment stage
 FROM ubuntu:22.04 as final
 
 RUN apt-get update && apt-get install -y \
@@ -68,6 +69,7 @@ RUN apt-get update && apt-get install -y \
     ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
+#Copy from build stage
 COPY --from=builder /opt/spack/ /opt/spack/
 COPY --from=builder /opt/c4h-spack-packages /opt/c4h-spack-packages
 
