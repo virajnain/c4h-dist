@@ -12,7 +12,9 @@ SHELL ["/bin/bash", "-c"]
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack compiler find && \
-    spack install gcc@14
+    spack install gcc@14 && \
+    spack compiler add $(spack location -i gcc@14)/bin && \
+    spack compiler list
 
 COPY c4h-spack-packages /opt/c4h-spack-packages
 
@@ -36,8 +38,10 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
 FROM ubuntu:22.04 AS final
 
 RUN apt-get update && apt-get install -y \
-    bash git curl wget unzip xz-utils bzip2 file patch make \
-    python3 build-essential gfortran ca-certificates ninja-build \
+    bash \
+    python3 \
+    git \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/software /opt/software
