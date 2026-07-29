@@ -1,4 +1,19 @@
 spack:
   specs:
-    - cmake
-    - python
+    - root+geom+math
+    - dd4hep
+    - edm4hep
+    - podio
+    - geant4
+    - stitched
+    - k4geo
+    - lcio
+    - boost +program_options
+    - py-pybind11
+
+  concretizer:
+    unify: true
+
+  packages:
+    all:
+      compiler: [gcc@14]

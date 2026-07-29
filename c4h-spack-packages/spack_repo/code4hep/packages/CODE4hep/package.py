@@ -23,3 +23,4 @@ class Code4hep(CMakePackage):
     depends_on("geant4")
     depends_on("py-pybind11")
     depends_on("stitched")
+    depends_on("lcio")
