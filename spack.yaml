@@ -10,10 +10,11 @@ spack:
     - lcio
     - boost +program_options
     - py-pybind11
+    - catch2
 
   concretizer:
     unify: true
 
   packages:
     all:
-      compiler: [gcc@14]
+      require: "%gcc@14"
