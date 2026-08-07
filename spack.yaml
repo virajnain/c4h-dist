@@ -17,4 +17,21 @@ spack:
 
   packages:
     all:
-      require: "%gcc@14"
+      prefer:
+        - "*%gcc@14"
+    gcc:
+      require:
+        - "*%gcc@11.5.0"
+    py-hatchling:
+      require:
+        - "@1.29.0"
+    py-trove-classifiers:
+      require:
+        - "@2026.6.1.19"
+    dd4hep:
+      require:
+        - "*+ddg4"
+        - "*+xercesc"
+    geant4:
+      require:
+        - "@11:"
