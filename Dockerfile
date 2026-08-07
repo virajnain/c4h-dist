@@ -4,33 +4,33 @@ SHELL ["/bin/bash", "-c"]
 
 RUN dnf -y update && \
     dnf install -y \
-        git \
+    git \
 	gcc \
-        gcc-c++ \
-        gcc-gfortran \
-        make \
+    gcc-c++ \
+    gcc-gfortran \
+    make \
 	cmake \
-        python3 \
-        python3-pip \
-        wget \
-        tar \
+    python3 \
+    python3-pip \
+    wget \
+    tar \
 	xz \
 	bzip2 \
-        which \
-        file \
+    which \
+    file \
 	patch \
-        hostname \
-        perl \
+    hostname \
+    perl \
 	procps-ng \
-        openssl-devel \
-        libuuid-devel \
-        libX11-devel \
-        libXpm-devel \
-        libXft-devel \
-        libXext-devel \
-        mesa-libGL-devel \
-        glibc-langpack-en \
-        dnf-plugins-core && \
+    openssl-devel \
+    libuuid-devel \
+    libX11-devel \
+    libXpm-devel \
+    libXft-devel \
+    libXext-devel \
+    mesa-libGL-devel \
+    glibc-langpack-en \
+    dnf-plugins-core && \
     dnf clean all
 
 ENV LANG=en_US.UTF-8
