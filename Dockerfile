@@ -39,10 +39,6 @@ ENV LC_ALL=en_US.UTF-8
 WORKDIR /opt
 RUN git clone --branch v1.0.0 https://github.com/spack/spack.git
 
-RUN source /opt/spack/share/spack/setup-env.sh && \
-    spack compiler find && \
-    spack compiler list
-
 # Fix readline patch URL (ftpmirror.gnu.org has been unreliable)
 RUN source /opt/spack/share/spack/setup-env.sh && \
     sed -i 's#https://ftpmirror.gnu.org/readline#https://ftp.gnu.org/gnu/readline#g' \
@@ -52,7 +48,8 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack install gcc@14
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
-    spack compiler find
+    spack compiler find && \
+    spack compiler list
 
 COPY c4h-spack-packages /opt/c4h-spack-packages
 COPY spack.yaml /opt/spack-env/spack.yaml
@@ -62,22 +59,17 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack repo list
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
-    spack compiler list
-
-RUN source /opt/spack/share/spack/setup-env.sh && \
     spack env create code4hep_env /opt/spack-env/spack.yaml && \
     spack env activate code4hep_env && \
     spack concretize -f && \
     spack spec root && \
     spack install --fail-fast --show-log-on-error
 
-# Now bootstrap build
 WORKDIR /scratch
 RUN git clone https://github.com/code4hep/build.git -b bootstrap
 
 COPY patch-code4hep-install.sh /scratch/build/patch-code4hep-install.sh
 WORKDIR /scratch/build
 RUN chmod +x patch-code4hep-install.sh && ./patch-code4hep-install.sh
-
 
 CMD ["bash"]

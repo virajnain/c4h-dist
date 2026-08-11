@@ -1,0 +1,34 @@
+name: Build Code4hep
+
+on:
+  push:
+  pull_request:
+
+jobs:
+#  pre-commit:
+#    name: Code format & static checks
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.12"
+#      - uses: pre-commit/action@v3.0.1
+
+  build:
+    name: Build Code4hep
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/virajnain/code4hep-ci:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Code4hep
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          cd /scratch/build
+          ./setup.sh
+#      - name: Run clang-tidy
+#        run: |
+#          find /scratch/build -name 'compile_commands.json'
+#          run-clang-tidy -p /scratch/build/<path-to-build-dir>
