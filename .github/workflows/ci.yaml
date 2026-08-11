@@ -15,20 +15,33 @@ jobs:
 #          python-version: "3.12"
 #      - uses: pre-commit/action@v3.0.1
 
-  build:
-    name: Build Code4hep
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/virajnain/code4hep-ci:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Code4hep
+      - name: Build and test Code4hep
         run: |
           source /opt/spack/share/spack/setup-env.sh
           spack env activate code4hep_env
           cd /scratch/build
           ./setup.sh
-#      - name: Run clang-tidy
+          cd Code4hep/build   # confirm this matches your actual build dir
+          ctest --output-on-failure
+#  static-analysis:
+#    name: Static Analysis
+#    runs-on: ubuntu-latest
+#    container:
+#      image: ghcr.io/virajnain/code4hep-ci:latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Build Code4hep and run static analysis
 #        run: |
+#          source /opt/spack/share/spack/setup-env.sh
+#          spack env activate code4hep_env
+#          cd /scratch/build
+#          ./setup.sh
 #          find /scratch/build -name 'compile_commands.json'
 #          run-clang-tidy -p /scratch/build/<path-to-build-dir>
