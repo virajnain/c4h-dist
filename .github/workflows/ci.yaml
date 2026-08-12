@@ -23,6 +23,12 @@ jobs:
       image: ghcr.io/virajnain/code4hep-ci:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Spack Tests
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          spack repo list
+          spack find -cv edm4hep root podio stitched
       - name: Build Code4hep
         run: |
           source /opt/spack/share/spack/setup-env.sh
@@ -42,7 +48,7 @@ jobs:
           spack env activate code4hep_env
           cd /scratch/build
           ./setup.sh
-          cd Code4hep/build   # confirm this matches your actual build dir
+          cd /scratch/tmp/Code4hep/build_Code4hep
           ctest --output-on-failure
 #  static-analysis:
 #    name: Static Analysis
