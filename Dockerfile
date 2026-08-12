@@ -45,11 +45,8 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     $(spack location -p readline)/package.py
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
-    spack install gcc@14
-
-RUN source /opt/spack/share/spack/setup-env.sh && \
-    spack compiler find && \
-    spack compiler list
+    spack install gcc@14 && \
+	spack compiler find
 
 COPY c4h-spack-packages /opt/c4h-spack-packages
 COPY spack.yaml /opt/spack-env/spack.yaml
@@ -62,7 +59,6 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack env create code4hep_env /opt/spack-env/spack.yaml && \
     spack env activate code4hep_env && \
     spack concretize -f && \
-    spack spec root && \
     spack install --fail-fast --show-log-on-error
 
 WORKDIR /scratch
