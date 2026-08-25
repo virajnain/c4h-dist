@@ -25,6 +25,13 @@ jobs:
         HOME: /root
     steps:
       - uses: actions/checkout@v4
+      - name: Spack Tests
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          spack repo list
+          find /opt/c4h-spack-packages -iname "package.py" | grep -i code4hep
+          cat /opt/c4h-spack-packages/spack_repo/code4hep/repo.yaml 2>/dev/null
       - name: Build Code4hep with Spack
         run: |
           source /opt/spack/share/spack/setup-env.sh
