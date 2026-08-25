@@ -31,7 +31,7 @@ RUN dnf -y update && \
     mesa-libGL-devel \
     glibc-langpack-en && \
     dnf clean all
-
+    
 WORKDIR /opt
 RUN git clone --branch v1.0.0 https://github.com/spack/spack.git
 
@@ -40,7 +40,8 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack install gcc@14 && \
-	spack compiler find
+    spack compiler find && \
+    spack compiler list
 
 COPY c4h-spack-packages /opt/c4h-spack-packages
 
@@ -54,14 +55,6 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack env create code4hep_env /opt/spack-env/spack.yaml && \
     spack env activate code4hep_env && \
     spack concretize -f && \
-    spack spec root && \
-    spack install --fail-fast --show-log-on-error
-
-WORKDIR /scratch
-RUN git clone https://github.com/code4hep/build.git -b bootstrap
-
-COPY patch-code4hep-install.sh /scratch/build/patch-code4hep-install.sh
-WORKDIR /scratch/build
-RUN chmod +x patch-code4hep-install.sh && ./patch-code4hep-install.sh
+    spack install --fail-fast --show-log-on-error -j$(nproc)
 
 CMD ["bash"]
