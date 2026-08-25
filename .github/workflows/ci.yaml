@@ -23,19 +23,21 @@ jobs:
       image: ghcr.io/virajnain/code4hep-ci:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply plugin-install fix
-        run: |
-          sed -i 's|# All plugin .so files must share one directory for edmPluginRefresh.|install(TARGETS ${_target} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")\n\n    # All plugin .so files must share one directory for edmPluginRefresh.|' \
-            cmake/Code4hepBuildFunctions.cmake
-      - name: Build Code4hep
+      - name: Build Code4hep with Spack
         run: |
           source /opt/spack/share/spack/setup-env.sh
           spack env activate code4hep_env
-          cmake -B build -S . \
-            -DCMAKE_MODULE_PATH=/opt/c4h-spack-packages/spack_repo/code4hep/packages/code4hep/cmake-modules \
-            -DPYTHIA8_ROOT=$(spack location -i pythia8) \
-            -DC4H_ENABLE_TIDY=OFF
-          cmake --build build -j$(nproc)
+          spack develop --path "$GITHUB_WORKSPACE" code4hep@main
+          spack add code4hep
+          spack concretize -f
+          spack install --fail-fast --show-log-on-error -j$(nproc)
+      - name: Run tests
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          spack load stitched
+          source $(which stitched_env.sh)
+          spack location -i code4hep
 #  static-analysis:
 #    name: Static Analysis
 #    runs-on: ubuntu-latest
