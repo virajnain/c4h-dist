@@ -28,7 +28,7 @@ jobs:
           source /opt/spack/share/spack/setup-env.sh
           spack repo add /opt/c4h-spack-packages/spack_repo/code4hep
           spack env activate code4hep_env
-          spack install code4hep --fail-fast --show-log-on-error -j$(nproc)
+          spack install --fail-fast --show-log-on-error -j$(nproc) --add code4hep
       - name: Run tests
         run: |
           source /opt/spack/share/spack/setup-env.sh
