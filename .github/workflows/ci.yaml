@@ -28,14 +28,12 @@ jobs:
           source /opt/spack/share/spack/setup-env.sh
           spack repo add /opt/c4h-spack-packages/spack_repo/code4hep
           spack env activate code4hep_env
-          spack install --fail-fast --show-log-on-error -j$(nproc) --add code4hep
+          spack install --fail-fast --show-log-on-error -j$(nproc) --keep-stage --add code4hep
       - name: Run tests
         run: |
           source /opt/spack/share/spack/setup-env.sh
           spack env activate code4hep_env
-          spack load stitched
-          source $(which stitched_env.sh)
-          spack location -i code4hep
+          ctest --output-on-failure --test-dir "$(spack location -b code4hep)"
 #  static-analysis:
 #    name: Static Analysis
 #    runs-on: ubuntu-latest
