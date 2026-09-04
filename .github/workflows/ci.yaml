@@ -27,6 +27,7 @@ jobs:
         run: |
           source /opt/spack/share/spack/setup-env.sh
           spack env activate code4hep_env
+          spack uninstall -y code4hep || true
           spack install --fail-fast --show-log-on-error -j$(nproc) --keep-stage --add code4hep
       - name: Run tests
         run: |
