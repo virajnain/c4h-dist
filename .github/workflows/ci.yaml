@@ -1,0 +1,54 @@
+name: Build Code4hep
+
+on:
+  push:
+  pull_request:
+
+jobs:
+#  pre-commit:
+#    name: Code format & static checks
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.12"
+#      - uses: pre-commit/action@v3.0.1
+
+
+  build:
+    name: Build and Test Code4hep
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/virajnain/code4hep-ci:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Code4hep with Spack
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          spack uninstall -y code4hep || true
+          spack install --fail-fast --show-log-on-error -j$(nproc) --keep-stage --add code4hep
+#      - name: Run tests
+#        run: |
+#          source /opt/spack/share/spack/setup-env.sh
+#          spack env activate code4hep_env
+#          source $(spack location -i stitched)/bin/stitched_env.sh
+#          export PYTHONPATH=$(spack location -i code4hep)/python:$PYTHONPATH
+#          ctest --output-on-failure --test-dir "$(spack location -b code4hep)"
+
+#  static-analysis:
+#    name: Static Analysis
+#    runs-on: ubuntu-latest
+#    container:
+#      image: ghcr.io/virajnain/code4hep-ci:latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Build Code4hep and run static analysis
+#        run: |
+#          source /opt/spack/share/spack/setup-env.sh
+#          spack env activate code4hep_env
+#          cd /scratch/build
+#          ./setup.sh
+#          find /scratch/build -name 'compile_commands.json'
+#          run-clang-tidy -p /scratch/build/<path-to-build-dir>

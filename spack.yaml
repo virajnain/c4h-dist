@@ -1,0 +1,31 @@
+spack:
+  specs:
+  - code4hep ^stitched cxxstd=20 ^root@6.36
+  concretizer:
+    unify: true
+
+  packages:
+    all:
+      prefer:
+	      - "*%gcc@14"
+    gcc:
+      require:
+	      - "*%gcc@11.5.0"
+    py-hatchling:
+      require:
+	      - "@1.29.0"
+    py-trove-classifiers:
+      require:
+	      - "@2026.6.1.19"
+    edm4hep:
+      require:
+	      - "@1.0:"
+    dd4hep:
+      require:
+	      - "*+ddg4"
+    geant4:
+      require:
+	      - "@11.5.0.beta +threads +data"
+    podio:
+      require:
+        - "@1.7"
