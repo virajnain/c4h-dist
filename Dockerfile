@@ -43,7 +43,10 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack compiler find && \
     spack compiler list
 
-COPY c4h-spack-packages /opt/c4h-spack-packages
+ARG C4H_SPACK_PACKAGES_REF=main
+RUN git clone --depth 1 --branch ${C4H_SPACK_PACKAGES_REF} \
+    https://github.com/virajnain/c4h-spack-packages.git \
+    /opt/c4h-spack-packages
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
     spack repo add /opt/c4h-spack-packages/spack_repo/code4hep && \
