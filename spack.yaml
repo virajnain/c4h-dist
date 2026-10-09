@@ -8,6 +8,7 @@ spack:
     all:
       prefer:
 	      - "*%gcc@14"
+      variants: cxxstd=20
     gcc:
       require:
 	      - "*%gcc@11.5.0"
