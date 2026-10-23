@@ -128,6 +128,7 @@ jobs:
       - name: Build Code4hep with Spack
         run: |
           source /opt/spack/share/spack/setup-env.sh
+          spack repo add /opt/c4h-spack-packages/spack_repo/code4hep || true
           spack env activate code4hep_env
           spack uninstall -y code4hep || true
           spack concretize -f

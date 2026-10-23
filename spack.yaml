@@ -1,4 +1,6 @@
 spack:
+  repos:
+  - /opt/c4h-spack-packages/spack_repo/code4hep
   specs:
   - code4hep@main ^root@6.36
   concretizer:
