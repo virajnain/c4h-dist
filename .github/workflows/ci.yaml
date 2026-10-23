@@ -28,26 +28,13 @@ jobs:
       image: ${{ steps.check.outputs.image }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - id: check
         run: |
-          before="${{ github.event.before }}"
-          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
-            files=$(git ls-files)
-          else
-            files=$(git diff --name-only "$before" "$GITHUB_SHA")
-          fi
-          echo "event=${{ github.event_name }} ref=${{ github.ref }}"; echo "$files"
-          base=false; image=false
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            base=true; image=true
-          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "$files" | grep -qxE 'Dockerfile\.base' && { base=true; image=true; }
-            echo "$files" | grep -qxE 'Dockerfile|spack\.yaml|scripts/c4h-develop|\.github/workflows/ci\.yaml' && image=true
+            echo "base=true" >> "$GITHUB_OUTPUT"; echo "image=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=false" >> "$GITHUB_OUTPUT"; echo "image=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "base=$base" >> "$GITHUB_OUTPUT"
-          echo "image=$image" >> "$GITHUB_OUTPUT"
   base:
     name: Build and push base image
     needs: changes
@@ -101,6 +88,13 @@ jobs:
             SPACK_JOBS=4
             BASE_IMAGE=ghcr.io/virajnain/c4h-base:latest
           tags: ghcr.io/virajnain/code4hep-ci:${{ steps.meta.outputs.tag }}
+      - name: Refuse non-portable images
+        run: |
+          docker run --rm ghcr.io/virajnain/code4hep-ci:${{ steps.meta.outputs.tag }} bash -c '
+            source /opt/spack/share/spack/setup-env.sh
+            archs=$(spack find -v | grep -o "arch=[^ ]*" | sort -u)
+            echo "$archs"
+            [ "$archs" = "arch=linux-almalinux9-x86_64_v3" ]'
       - name: Add newly built packages to the build cache
         run: |
           docker run --rm -e GHCR_USER=${{ github.actor }} -e GHCR_TOKEN=${{ secrets.GITHUB_TOKEN }} \
@@ -125,6 +119,15 @@ jobs:
       image: ghcr.io/virajnain/code4hep-ci:${{ needs.image.outputs.tag || 'latest' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Show runner CPU
+        run: |
+          grep -m1 'model name' /proc/cpuinfo
+          grep -q avx512f /proc/cpuinfo && echo "AVX-512: yes" || echo "AVX-512: NO"
+      - name: Show package architectures in the image
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          spack find -v | grep -oE 'arch=[^ ]+' | sort | uniq -c
       - name: Build Code4hep with Spack
         run: |
           source /opt/spack/share/spack/setup-env.sh
