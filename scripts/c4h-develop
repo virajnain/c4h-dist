@@ -1,0 +1,10 @@
+#!/bin/bash
+# c4h-develop: build Code4hep from a source checkout inside the container.
+# usage: c4h-develop [SOURCE_DIR]   (default ~/Code4hep; cloned from main if missing)
+set -euo pipefail
+SRC=${1:-$HOME/Code4hep}
+source /opt/spack/share/spack/setup-env.sh
+spack env activate code4hep_env
+spack develop --path "$SRC" code4hep@main
+spack install --fail-fast --show-log-on-error -j"${JOBS:-$(nproc)}"
+echo "Installed: $(spack location -i code4hep)"

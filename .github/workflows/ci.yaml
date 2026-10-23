@@ -3,6 +3,11 @@ name: Build Code4hep
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      c4h_spack_packages_ref:
+        description: c4h-spack-packages branch or tag to build the image against
+        default: main
 
 jobs:
 #  pre-commit:
@@ -15,12 +20,109 @@ jobs:
 #          python-version: "3.12"
 #      - uses: pre-commit/action@v3.0.1
 
+  changes:
+    name: Do the image inputs need a rebuild?
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.check.outputs.base }}
+      image: ${{ steps.check.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: check
+        run: |
+          before="${{ github.event.before }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            files=$(git ls-files)
+          else
+            files=$(git diff --name-only "$before" "$GITHUB_SHA")
+          fi
+          echo "event=${{ github.event_name }} ref=${{ github.ref }}"; echo "$files"
+          base=false; image=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            base=true; image=true
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "$files" | grep -qxE 'Dockerfile\.base' && { base=true; image=true; }
+            echo "$files" | grep -qxE 'Dockerfile|spack\.yaml|scripts/c4h-develop|\.github/workflows/ci\.yaml' && image=true
+          fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+  base:
+    name: Build and push base image
+    needs: changes
+    if: needs.changes.outputs.base == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.base
+          push: true
+          tags: ghcr.io/virajnain/c4h-base:latest
+  image:
+    name: Build and push container
+    needs: [changes, base]
+    if: ${{ !cancelled() && needs.changes.outputs.image == 'true' && (needs.base.result == 'success' || needs.base.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          build-args: |
+            C4H_SPACK_PACKAGES_REF=${{ inputs.c4h_spack_packages_ref || 'main' }}
+            SPACK_JOBS=4
+            BASE_IMAGE=ghcr.io/virajnain/c4h-base:latest
+          tags: ghcr.io/virajnain/code4hep-ci:${{ steps.meta.outputs.tag }}
+      - name: Add newly built packages to the build cache
+        run: |
+          docker run --rm -e GHCR_USER=${{ github.actor }} -e GHCR_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            ghcr.io/virajnain/code4hep-ci:${{ steps.meta.outputs.tag }} bash -c '
+              source /opt/spack/share/spack/setup-env.sh
+              spack mirror add --unsigned --oci-username "$GHCR_USER" \
+                --oci-password-variable GHCR_TOKEN c4h-push oci://ghcr.io/virajnain/c4h-buildcache
+              spack buildcache push --unsigned --update-index c4h-push $(spack find --format "/{hash}")'
+      - name: Push the image
+        run: |
+          docker tag ghcr.io/virajnain/code4hep-ci:${{ steps.meta.outputs.tag }} ghcr.io/virajnain/code4hep-ci:latest
+          docker push ghcr.io/virajnain/code4hep-ci:${{ steps.meta.outputs.tag }}
+          docker push ghcr.io/virajnain/code4hep-ci:latest
 
   build:
     name: Build and Test Code4hep
+    needs: [changes, base, image]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.base.result) && contains(fromJSON('["success","skipped"]'), needs.image.result) }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/virajnain/code4hep-ci:latest
+      # the image built in this run if there was one, otherwise the latest published
+      image: ghcr.io/virajnain/code4hep-ci:${{ needs.image.outputs.tag || 'latest' }}
     steps:
       - uses: actions/checkout@v4
       - name: Build Code4hep with Spack
@@ -28,7 +130,13 @@ jobs:
           source /opt/spack/share/spack/setup-env.sh
           spack env activate code4hep_env
           spack uninstall -y code4hep || true
+          spack concretize -f
           spack install --fail-fast --show-log-on-error -j$(nproc) --keep-stage --add code4hep
+      - name: Check that Code4hep was installed
+        run: |
+          source /opt/spack/share/spack/setup-env.sh
+          spack env activate code4hep_env
+          spack find -v code4hep
 #      - name: Run tests
 #        run: |
 #          source /opt/spack/share/spack/setup-env.sh
