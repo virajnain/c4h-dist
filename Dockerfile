@@ -15,7 +15,7 @@ RUN source /opt/spack/share/spack/setup-env.sh && \
     spack compiler find
 
 RUN source /opt/spack/share/spack/setup-env.sh && \
-    spack install gcc@14 && \
+    spack install gcc@14 target=x86_64_v3 && \
     spack compiler find && \
     spack compiler list
 

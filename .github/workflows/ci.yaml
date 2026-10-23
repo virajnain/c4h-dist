@@ -94,7 +94,7 @@ jobs:
             source /opt/spack/share/spack/setup-env.sh
             archs=$(spack find -v | grep -o "arch=[^ ]*" | sort -u)
             echo "$archs"
-            [ "$archs" = "arch=linux-almalinux9-x86_64_v3" ]'
+            [ -n "$archs" ] && ! echo "$archs" | grep -qE "x86_64_v4|skylake_avx512|cascadelake|cooperlake|icelake|sapphirerapids|knl|knm|zen4|zen5"'
       - name: Add newly built packages to the build cache
         run: |
           docker run --rm -e GHCR_USER=${{ github.actor }} -e GHCR_TOKEN=${{ secrets.GITHUB_TOKEN }} \
